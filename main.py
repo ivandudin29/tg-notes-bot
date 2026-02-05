@@ -53,6 +53,10 @@ async def lifespan(app: FastAPI):
         webhook_path = "/webhook"
         full_webhook_url = f"{webhook_url}{webhook_path}"
         
+        # Удаляем старый вебхук если есть
+        await bot.delete_webhook(drop_pending_updates=True)
+        
+        # Устанавливаем новый вебхук
         await bot.set_webhook(
             url=full_webhook_url,
             drop_pending_updates=True
@@ -110,27 +114,36 @@ async def root():
     }
 
 
-if __name__ == "__main__":
-    # Для локального запуска без вебхука
-    if not os.getenv("WEBHOOK_URL"):
-        logger.info("Запуск в режиме поллинга...")
+# Главная функция для запуска
+async def main():
+    """Главная функция для запуска бота"""
+    await db.create_pool()
+    
+    # Запуск фоновой задачи для напоминаний
+    asyncio.create_task(commands.send_reminders(bot))
+    
+    # Определяем режим работы
+    webhook_url = os.getenv("WEBHOOK_URL")
+    
+    if webhook_url:
+        # Режим вебхука
+        logger.info("Запуск в режиме вебхука...")
         
-        async def main():
-            await db.create_pool()
-            
-            # Запуск фоновой задачи
-            asyncio.create_task(commands.send_reminders(bot))
-            
-            # Запуск поллинга
-            await dp.start_polling(bot)
-        
-        asyncio.run(main())
-    else:
-        # Запуск через uvicorn для вебхука
+        # Запуск FastAPI сервера
         port = int(os.getenv("PORT", 8000))
-        uvicorn.run(
-            "main:app",
+        config = uvicorn.Config(
+            app=app,
             host="0.0.0.0",
             port=port,
-            reload=False
+            log_level="info"
         )
+        server = uvicorn.Server(config)
+        await server.serve()
+    else:
+        # Режим поллинга
+        logger.info("Запуск в режиме поллинга...")
+        await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
