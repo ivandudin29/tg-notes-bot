@@ -1,137 +1,204 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from typing import List, Dict, Any
 
 
-def get_main_menu_keyboard() -> InlineKeyboardMarkup:
-    """Клавиатура главного меню"""
-    builder = InlineKeyboardBuilder()
-    builder.row(
-        InlineKeyboardButton(text="➕ Новый проект", callback_data="new_project"),
-        InlineKeyboardButton(text="📂 Мои проекты", callback_data="list_projects")
+def get_main_menu_keyboard():
+    """Главное меню"""
+    keyboard = InlineKeyboardBuilder()
+    
+    keyboard.add(
+        InlineKeyboardButton(text="📂 Мои проекты", callback_data="my_projects"),
+        InlineKeyboardButton(text="➕ Создать проект", callback_data="create_project"),
+        InlineKeyboardButton(text="❓ Помощь", callback_data="help_menu")
     )
-    builder.row(
-        InlineKeyboardButton(text="🔔 Напоминания", callback_data="show_reminders"),
-        InlineKeyboardButton(text="📝 Новая задача", callback_data="new_task")
-    )
-    return builder.as_markup()
+    
+    return keyboard.as_markup()
 
 
-def get_projects_keyboard(projects: List[Dict[str, Any]]) -> InlineKeyboardMarkup:
+def get_projects_keyboard(projects):
     """Клавиатура со списком проектов"""
-    builder = InlineKeyboardBuilder()
+    keyboard = InlineKeyboardBuilder()
     
     for project in projects:
-        builder.row(
+        keyboard.add(
             InlineKeyboardButton(
-                text=f"📁 {project['name'][:30]}",
+                text=f"📁 {project['name']}",
                 callback_data=f"project_{project['id']}"
             )
         )
     
-    builder.row(
-        InlineKeyboardButton(text="🔙 Назад", callback_data="back_to_main")
+    keyboard.add(
+        InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_main")
     )
     
-    return builder.as_markup()
+    keyboard.adjust(1)
+    return keyboard.as_markup()
 
 
-def get_project_actions_keyboard(project_id: int) -> InlineKeyboardMarkup:
-    """Клавиатура действий с проектом"""
-    builder = InlineKeyboardBuilder()
+def get_project_actions_keyboard(project_id):
+    """Действия с проектом"""
+    keyboard = InlineKeyboardBuilder()
     
-    builder.row(
-        InlineKeyboardButton(text="📋 Задачи", callback_data=f"project_tasks_{project_id}"),
-        InlineKeyboardButton(text="✏️ Ред.", callback_data=f"edit_project_{project_id}")
-    )
-    builder.row(
-        InlineKeyboardButton(text="🗑 Удалить", callback_data=f"delete_project_{project_id}"),
-        InlineKeyboardButton(text="🔙 Назад", callback_data="list_projects")
+    keyboard.add(
+        InlineKeyboardButton(
+            text="📋 Задачи проекта",
+            callback_data=f"view_tasks_{project_id}"
+        ),
+        InlineKeyboardButton(
+            text="➕ Добавить задачу",
+            callback_data=f"add_task_to_{project_id}"
+        ),
+        InlineKeyboardButton(
+            text="✏️ Редактировать",
+            callback_data=f"edit_project_{project_id}"
+        ),
+        InlineKeyboardButton(
+            text="🗑️ Удалить",
+            callback_data=f"delete_project_{project_id}"
+        ),
+        InlineKeyboardButton(
+            text="⬅️ Назад к проектам",
+            callback_data="my_projects"
+        )
     )
     
-    return builder.as_markup()
+    keyboard.adjust(1)
+    return keyboard.as_markup()
 
 
-def get_tasks_keyboard(tasks: List[Dict[str, Any]], project_id: int) -> InlineKeyboardMarkup:
+def get_tasks_keyboard(tasks, project_id):
     """Клавиатура со списком задач"""
-    builder = InlineKeyboardBuilder()
+    keyboard = InlineKeyboardBuilder()
     
     for task in tasks:
-        status_icon = "✅" if task['status'] == 'завершено' else "⏳"
-        builder.row(
+        status_icon = "✅" if task['completed'] else "⏳"
+        keyboard.add(
             InlineKeyboardButton(
                 text=f"{status_icon} {task['title'][:30]}",
                 callback_data=f"task_{task['id']}"
             )
         )
     
-    builder.row(
-        InlineKeyboardButton(text="🔙 Назад", callback_data=f"project_{project_id}"),
-        InlineKeyboardButton(text="➕ Новая задача", callback_data=f"new_task_project_{project_id}")
-    )
-    
-    return builder.as_markup()
-
-
-def get_task_actions_keyboard(task_id: int, status: str) -> InlineKeyboardMarkup:
-    """Клавиатура действий с задачей"""
-    builder = InlineKeyboardBuilder()
-    
-    if status == 'активно':
-        builder.row(
-            InlineKeyboardButton(text="✅ Завершить", callback_data=f"complete_task_{task_id}"),
-            InlineKeyboardButton(text="✏️ Ред.", callback_data=f"edit_task_{task_id}")
-        )
-    else:
-        builder.row(
-            InlineKeyboardButton(text="↩️ Вернуть в работу", callback_data=f"reopen_task_{task_id}"),
-            InlineKeyboardButton(text="✏️ Ред.", callback_data=f"edit_task_{task_id}")
-        )
-    
-    builder.row(
-        InlineKeyboardButton(text="💬 Комментарий", callback_data=f"view_comment_{task_id}"),
-        InlineKeyboardButton(text="🗑 Удалить", callback_data=f"delete_task_{task_id}")
-    )
-    
-    return builder.as_markup()
-
-
-def get_confirm_delete_keyboard(item_type: str, item_id: int) -> InlineKeyboardMarkup:
-    """Клавиатура подтверждения удаления"""
-    builder = InlineKeyboardBuilder()
-    
-    builder.row(
+    keyboard.add(
         InlineKeyboardButton(
-            text="❗ Подтвердить удаление",
-            callback_data=f"confirm_delete_{item_type}_{item_id}"
+            text="➕ Добавить задачу",
+            callback_data=f"add_task_to_{project_id}"
+        ),
+        InlineKeyboardButton(
+            text="⬅️ Назад к проекту",
+            callback_data=f"project_{project_id}"
         )
     )
-    builder.row(
-        InlineKeyboardButton(text="❌ Отмена", callback_data=f"cancel_delete_{item_type}_{item_id}")
+    
+    keyboard.adjust(1)
+    return keyboard.as_markup()
+
+
+def get_task_actions_keyboard(task_id):
+    """Действия с задачей"""
+    keyboard = InlineKeyboardBuilder()
+    
+    keyboard.add(
+        InlineKeyboardButton(
+            text="✅ Отметить выполненной",
+            callback_data=f"complete_task_{task_id}"
+        ),
+        InlineKeyboardButton(
+            text="✏️ Редактировать",
+            callback_data=f"edit_task_{task_id}"
+        ),
+        InlineKeyboardButton(
+            text="🗑️ Удалить",
+            callback_data=f"delete_task_{task_id}"
+        ),
+        InlineKeyboardButton(
+            text="⬅️ Назад к задачам",
+            callback_data="my_projects"
+        )
     )
     
-    return builder.as_markup()
+    keyboard.adjust(1)
+    return keyboard.as_markup()
 
 
-def get_edit_task_fields_keyboard(task_id: int) -> InlineKeyboardMarkup:
-    """Клавиатура выбора поля для редактирования задачи"""
-    builder = InlineKeyboardBuilder()
+def get_confirm_delete_keyboard(entity_type, entity_id):
+    """Подтверждение удаления"""
+    keyboard = InlineKeyboardBuilder()
     
-    builder.row(
-        InlineKeyboardButton(text="📅 Дедлайн", callback_data=f"edit_deadline_{task_id}"),
-        InlineKeyboardButton(text="💬 Комментарий", callback_data=f"edit_comment_{task_id}")
-    )
-    builder.row(
-        InlineKeyboardButton(text="🔙 Назад", callback_data=f"task_{task_id}")
+    keyboard.add(
+        InlineKeyboardButton(
+            text="✅ Да, удалить",
+            callback_data=f"confirm_delete_{entity_type}_{entity_id}"
+        ),
+        InlineKeyboardButton(
+            text="❌ Нет, отмена",
+            callback_data=f"cancel_delete_{entity_type}_{entity_id}"
+        )
     )
     
-    return builder.as_markup()
+    keyboard.adjust(2)
+    return keyboard.as_markup()
 
 
-def get_cancel_keyboard(callback_data: str = "cancel") -> InlineKeyboardMarkup:
-    """Клавиатура отмены действия"""
-    builder = InlineKeyboardBuilder()
-    builder.row(
-        InlineKeyboardButton(text="❌ Отмена", callback_data=callback_data)
+def get_edit_task_fields_keyboard(task_id):
+    """Выбор поля для редактирования задачи"""
+    keyboard = InlineKeyboardBuilder()
+    
+    keyboard.add(
+        InlineKeyboardButton(
+            text="📝 Название",
+            callback_data=f"edit_task_field_{task_id}_title"
+        ),
+        InlineKeyboardButton(
+            text="📄 Описание",
+            callback_data=f"edit_task_field_{task_id}_description"
+        ),
+        InlineKeyboardButton(
+            text="📅 Дедлайн",
+            callback_data=f"edit_task_field_{task_id}_deadline"
+        ),
+        InlineKeyboardButton(
+            text="⬅️ Назад",
+            callback_data=f"task_{task_id}"
+        )
     )
-    return builder.as_markup()
+    
+    keyboard.adjust(1)
+    return keyboard.as_markup()
+
+
+def get_cancel_keyboard():
+    """Клавиатура для отмены действия"""
+    keyboard = InlineKeyboardBuilder()
+    
+    keyboard.add(
+        InlineKeyboardButton(
+            text="❌ Отмена",
+            callback_data="back_to_main"
+        )
+    )
+    
+    return keyboard.as_markup()
+
+
+def get_help_keyboard():
+    """Клавиатура помощи"""
+    keyboard = InlineKeyboardBuilder()
+    
+    keyboard.add(
+        InlineKeyboardButton(
+            text="📋 Команды",
+            callback_data="help_commands"
+        ),
+        InlineKeyboardButton(
+            text="📅 Формат даты",
+            callback_data="help_date_format"
+        ),
+        InlineKeyboardButton(
+            text="⬅️ Главное меню",
+            callback_data="back_to_main"
+        )
+    )
+    
+    keyboard.adjust(1)
+    return keyboard.as_markup()
