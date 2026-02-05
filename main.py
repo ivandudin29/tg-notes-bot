@@ -116,22 +116,18 @@ async def root():
     }
 
 
-# Главная функция для запуска
 async def main():
-    """Главная функция для запуска бота"""
+    """Запуск бота в зависимости от режима"""
     await db.create_pool()
     
     # Запуск фоновой задачи для напоминаний
     asyncio.create_task(send_reminders(bot))
     
-    # Определяем режим работы
+    # Режим вебхука
     webhook_url = os.getenv("WEBHOOK_URL")
     
     if webhook_url:
-        # Режим вебхука
         logger.info("Запуск в режиме вебхука...")
-        
-        # Запуск FastAPI сервера
         port = int(os.getenv("PORT", 8000))
         config = uvicorn.Config(
             app=app,
@@ -142,8 +138,8 @@ async def main():
         server = uvicorn.Server(config)
         await server.serve()
     else:
-        # Режим поллинга
         logger.info("Запуск в режиме поллинга...")
+        await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)
 
 
