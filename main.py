@@ -13,7 +13,9 @@ import os
 from dotenv import load_dotenv
 
 from db import db
-from handlers import commands, callbacks, fsm_handlers
+from handlers.commands import router as commands_router, send_reminders
+from handlers.callbacks import router as callbacks_router
+from handlers.fsm_handlers import router as fsm_handlers_router
 
 # Загрузка переменных окружения
 load_dotenv()
@@ -34,9 +36,9 @@ storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 
 # Регистрация роутеров
-dp.include_router(commands.router)
-dp.include_router(callbacks.router)
-dp.include_router(fsm_handlers.router)
+dp.include_router(commands_router)
+dp.include_router(callbacks_router)
+dp.include_router(fsm_handlers_router)
 
 # FastAPI приложение
 app = FastAPI()
@@ -66,7 +68,7 @@ async def lifespan(app: FastAPI):
         logger.warning("WEBHOOK_URL не указан, используем поллинг")
     
     # Запуск фоновой задачи для напоминаний
-    task = asyncio.create_task(commands.send_reminders(bot))
+    task = asyncio.create_task(send_reminders(bot))
     
     yield
     
@@ -120,7 +122,7 @@ async def main():
     await db.create_pool()
     
     # Запуск фоновой задачи для напоминаний
-    asyncio.create_task(commands.send_reminders(bot))
+    asyncio.create_task(send_reminders(bot))
     
     # Определяем режим работы
     webhook_url = os.getenv("WEBHOOK_URL")
