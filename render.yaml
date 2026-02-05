@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: telegram-task-bot
+    env: python
+    region: frankfurt  # или другой регион
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: task-planner-db
+          property: connectionString
+      - key: WEBHOOK_URL
+        sync: false
+      - key: PORT
+        value: 8000
